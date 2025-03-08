@@ -4,6 +4,8 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { databaseConfig } from './config/database.config';
+import { User } from './users/user.entity';
+import { UserModule } from './users/user.module';
 
 @Module({
   imports: [
@@ -11,6 +13,8 @@ import { databaseConfig } from './config/database.config';
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync(databaseConfig),
+    TypeOrmModule.forFeature([User]),
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
