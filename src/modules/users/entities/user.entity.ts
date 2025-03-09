@@ -2,10 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { IsEnum, IsDate, Matches } from 'class-validator';
+import { Account } from 'src/modules/accounts/entities/account.entity';
 
 export enum Gender {
   MALE = 'male',
@@ -35,6 +37,9 @@ export class User {
   @Column({ type: 'enum', enum: Gender })
   @IsEnum(Gender, { message: 'Gender must be male, female, or other' })
   gender: Gender;
+
+  @OneToMany(() => Account, (account) => account.user, { cascade: true })
+  accounts: Account[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { databaseConfig } from './config/database.config';
-import { User } from './users/user.entity';
-import { UserModule } from './users/user.module';
+import { UserModule } from './modules/users/user.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AccountsModule } from './modules/accounts/accounts.module';
 
 @Module({
   imports: [
@@ -13,8 +13,8 @@ import { UserModule } from './users/user.module';
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync(databaseConfig),
-    TypeOrmModule.forFeature([User]),
     UserModule,
+    AccountsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
