@@ -6,6 +6,9 @@ import { UserModule } from './modules/users/user.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AccountsModule } from './modules/accounts/accounts.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -14,9 +17,16 @@ import { AccountsModule } from './modules/accounts/accounts.module';
     }),
     TypeOrmModule.forRootAsync(databaseConfig),
     UserModule,
+    AuthModule,
     AccountsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}
