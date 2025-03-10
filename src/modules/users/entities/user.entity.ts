@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { IsEnum, IsDate, Matches } from 'class-validator';
 import { Account } from 'src/modules/accounts/entities/account.entity';
+import { Card } from 'src/modules/cards/entities/card.entity';
 
 export enum Gender {
   MALE = 'male',
@@ -40,6 +41,9 @@ export class User {
 
   @OneToMany(() => Account, (account) => account.user, { cascade: true })
   accounts: Account[];
+
+  @OneToMany(() => Card, (card) => card.user, { cascade: true })
+  cards: Card[];
 
   @CreateDateColumn()
   createdAt: Date;
