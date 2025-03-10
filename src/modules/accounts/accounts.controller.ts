@@ -10,14 +10,19 @@ import {
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '../users/entities/user.entity';
 
 @Controller('accounts')
 export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}
 
   @Post()
-  create(@Body() createAccountDto: CreateAccountDto) {
-    return this.accountsService.create(createAccountDto);
+  create(
+    @Body() createAccountDto: CreateAccountDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.accountsService.create(createAccountDto, user);
   }
 
   @Get()
@@ -36,7 +41,7 @@ export class AccountsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.accountsService.remove(id);
+  remove(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.accountsService.remove(id, user);
   }
 }

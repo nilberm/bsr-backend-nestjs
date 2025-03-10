@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { Gender, User } from './entities/user.entity';
+import { Account } from '../accounts/entities/account.entity';
 
 @Injectable()
 export class UserService {
@@ -26,9 +27,23 @@ export class UserService {
       user.dateOfBirth = birthday;
       user.gender = gender;
 
-      const createdUser = await this.dataSource.manager.save(user);
+      const userWithoutPassword = await this.dataSource.transaction(
+        async (manager) => {
+          const createdUser = await manager.save(user);
 
-      const { password: _, ...userWithoutPassword } = createdUser;
+          const account = new Account();
+          account.name = 'Default Account';
+          account.initialBalance = 0;
+          account.isDefault = true;
+          account.user = createdUser;
+
+          await manager.save(account);
+
+          const { password: _, ...userWithoutPassword } = createdUser;
+          return userWithoutPassword;
+        },
+      );
+
       return userWithoutPassword;
     } catch (error) {
       if (error.code === '23505') {

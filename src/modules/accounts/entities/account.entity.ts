@@ -22,6 +22,9 @@ export class Account {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   initialBalance: number;
 
+  @Column({ type: 'boolean', default: false })
+  isDefault: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
