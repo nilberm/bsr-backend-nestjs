@@ -7,8 +7,9 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { IsEnum, IsDate, Matches } from 'class-validator';
-import { Account } from 'src/modules/accounts/entities/account.entity';
-import { Card } from 'src/modules/cards/entities/card.entity';
+import { Account } from '../../accounts/entities/account.entity';
+import { Card } from '../../cards/entities/card.entity';
+import { Category } from '../../categories/entities/category.entity';
 
 export enum Gender {
   MALE = 'male',
@@ -44,6 +45,9 @@ export class User {
 
   @OneToMany(() => Card, (card) => card.user, { cascade: true })
   cards: Card[];
+
+  @OneToMany(() => Category, (category) => category.user, { cascade: true })
+  categories: Category[];
 
   @CreateDateColumn()
   createdAt: Date;
