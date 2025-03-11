@@ -10,6 +10,7 @@ import { IsEnum, IsDate, Matches } from 'class-validator';
 import { Account } from '../../accounts/entities/account.entity';
 import { Card } from '../../cards/entities/card.entity';
 import { Category } from '../../categories/entities/category.entity';
+import { Expense } from 'src/modules/expenses/entities/expense.entity';
 
 export enum Gender {
   MALE = 'male',
@@ -48,6 +49,9 @@ export class User {
 
   @OneToMany(() => Category, (category) => category.user, { cascade: true })
   categories: Category[];
+
+  @OneToMany(() => Expense, (expense) => expense.user)
+  expenses: Expense[];
 
   @CreateDateColumn()
   createdAt: Date;

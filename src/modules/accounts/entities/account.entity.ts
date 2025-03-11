@@ -1,9 +1,11 @@
+import { Expense } from 'src/modules/expenses/entities/expense.entity';
 import { User } from '../../users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -24,6 +26,9 @@ export class Account {
 
   @Column({ type: 'boolean', default: false })
   isDefault: boolean;
+
+  @OneToMany(() => Expense, (expense) => expense.account)
+  expenses: Expense[];
 
   @CreateDateColumn()
   createdAt: Date;

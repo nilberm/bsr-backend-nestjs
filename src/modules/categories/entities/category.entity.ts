@@ -1,5 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Expense } from 'src/modules/expenses/entities/expense.entity';
 
 export enum CategoryType {
   EXPENSE = 'expense',
@@ -19,6 +26,9 @@ export class Category {
 
   @ManyToOne(() => User, { nullable: true, onDelete: 'CASCADE' })
   user: User | null;
+
+  @OneToMany(() => Expense, (expense) => expense.category)
+  expenses: Expense[];
 
   @Column({ default: false })
   isDefault: boolean;

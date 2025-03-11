@@ -11,6 +11,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { CardModule } from './modules/cards/card.module';
 import { CategoryModule } from './modules/categories/category.module';
+import { ExpenseModule } from './modules/expenses/expense.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CategoryModule } from './modules/categories/category.module';
     AccountsModule,
     CardModule,
     CategoryModule,
+    ExpenseModule,
   ],
   controllers: [AppController],
   providers: [
