@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Earning } from 'src/modules/earning/entities/earning.entity';
 
 @Entity('accounts')
 export class Account {
@@ -29,6 +30,9 @@ export class Account {
 
   @OneToMany(() => Expense, (expense) => expense.account)
   expenses: Expense[];
+
+  @OneToMany(() => Earning, (earning) => earning.account)
+  earnings: Earning[];
 
   @CreateDateColumn()
   createdAt: Date;

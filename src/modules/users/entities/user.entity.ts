@@ -11,6 +11,7 @@ import { Account } from '../../accounts/entities/account.entity';
 import { Card } from '../../cards/entities/card.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { Expense } from 'src/modules/expenses/entities/expense.entity';
+import { Earning } from 'src/modules/earning/entities/earning.entity';
 
 export enum Gender {
   MALE = 'male',
@@ -52,6 +53,9 @@ export class User {
 
   @OneToMany(() => Expense, (expense) => expense.user)
   expenses: Expense[];
+
+  @OneToMany(() => Earning, (earning) => earning.user)
+  earnings: Earning[];
 
   @CreateDateColumn()
   createdAt: Date;
