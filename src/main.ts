@@ -8,7 +8,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('BSR API')
-    .setDescription('Documentação da API do Building Self-Reliance')
+    .setDescription('Documentation API Building Self-Reliance')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
@@ -18,7 +18,13 @@ async function bootstrap() {
   });
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
+  await app.listen(process.env.PORT ?? 8000);
 }
 
 void bootstrap();

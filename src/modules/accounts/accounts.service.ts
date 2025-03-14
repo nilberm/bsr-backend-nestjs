@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -37,35 +38,68 @@ export class AccountsService {
     return this.accountRepository.save(account);
   }
 
-  async findAll(): Promise<Account[]> {
-    return this.accountRepository.find();
+  async findAll(userId: string): Promise<Account[]> {
+    return this.accountRepository.find({
+      where: { user: { id: userId } },
+    });
   }
 
-  async findOne(id: string): Promise<Account | null> {
-    return this.accountRepository.findOne({ where: { id } });
+  async findOne(accountId: string, userId: string): Promise<Account> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId },
+      relations: ['user'],
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    if (account.user.id !== userId) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+
+    return account;
   }
 
   async update(
     id: string,
     updateAccountDto: UpdateAccountDto,
+    userId: string,
   ): Promise<Account> {
-    await this.accountRepository.update(id, updateAccountDto);
-
-    const updatedAccount = await this.findOne(id);
-    if (!updatedAccount) {
-      throw new Error('Account not found');
-    }
-
-    return updatedAccount;
-  }
-
-  async remove(accountId: string, user: User): Promise<void> {
     const account = await this.accountRepository.findOne({
-      where: { id: accountId, user: { id: user.id } },
+      where: { id, user: { id: userId } },
+      relations: ['user'],
     });
 
     if (!account) {
       throw new NotFoundException('Account not found');
+    }
+
+    if (account.user.id !== userId) {
+      throw new ForbiddenException(
+        'You do not have permission to update this account',
+      );
+    }
+
+    await this.accountRepository.update(id, updateAccountDto);
+
+    return this.findOne(id, userId);
+  }
+
+  async remove(accountId: string, userId: string): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId },
+      relations: ['user'],
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    if (account.user.id !== userId) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this account',
+      );
     }
 
     if (account.isDefault) {
