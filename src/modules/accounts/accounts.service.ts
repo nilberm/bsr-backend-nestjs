@@ -108,4 +108,28 @@ export class AccountsService {
 
     await this.accountRepository.remove(account);
   }
+
+  async updateBalance(
+    accountId: string,
+    balance: number,
+    userId: string,
+  ): Promise<Account> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId },
+      relations: ['user'],
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    if (account.user.id !== userId) {
+      throw new ForbiddenException(
+        'You do not have permission to update this account',
+      );
+    }
+
+    account.balance = balance;
+    return this.accountRepository.save(account);
+  }
 }

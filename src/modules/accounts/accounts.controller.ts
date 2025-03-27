@@ -7,6 +7,7 @@ import {
   Delete,
   Put,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
@@ -118,5 +119,29 @@ export class AccountsController {
   })
   remove(@Param('id') id: string, @CurrentUser() user: User) {
     return this.accountsService.remove(id, user.id);
+  }
+
+  @Patch(':id/edit-balance')
+  @ApiOperation({ summary: 'Update account balance by ID' })
+  @ApiResponse({ status: 200, description: 'Balance updated successfully.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden: Account does not belong to the user.',
+  })
+  @ApiResponse({ status: 404, description: 'Account not found.' })
+  @ApiParam({
+    name: 'id',
+    description: 'The ID of the account',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiBody({ schema: { properties: { balance: { type: 'number' } } } })
+  updateBalance(
+    @Param('id') id: string,
+    @Body('balance') balance: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.accountsService.updateBalance(id, balance, user.id);
   }
 }

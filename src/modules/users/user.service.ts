@@ -32,8 +32,8 @@ export class UserService {
           const createdUser = await manager.save(user);
 
           const account = new Account();
-          account.name = 'Default Account';
-          account.initialBalance = 0;
+          account.name = 'Main Account';
+          account.balance = 0;
           account.isDefault = true;
           account.user = createdUser;
 
