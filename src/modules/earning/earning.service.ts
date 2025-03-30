@@ -40,7 +40,9 @@ export class EarningService {
     }
 
     const earning = this.earningRepository.create({
-      ...createEarningDto,
+      description: createEarningDto.description,
+      amount: createEarningDto.amount,
+      date: createEarningDto.date ? new Date(createEarningDto.date) : undefined,
       user,
       account,
       category,

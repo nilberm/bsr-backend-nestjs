@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateEarningDto {
@@ -33,4 +40,13 @@ export class CreateEarningDto {
   @IsUUID()
   @IsNotEmpty()
   categoryId: string;
+
+  @ApiProperty({
+    description: 'The date of the earning',
+    example: '2025-03-30T14:00:00Z',
+    required: false,
+  })
+  @IsDateString()
+  @IsOptional()
+  date?: string;
 }
