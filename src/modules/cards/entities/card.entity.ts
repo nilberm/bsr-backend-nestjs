@@ -1,9 +1,11 @@
+import { Expense } from 'src/modules/expenses/entities/expense.entity';
 import { User } from '../../users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -27,6 +29,9 @@ export class Card {
 
   @Column({ type: 'int' })
   dueDay: number;
+
+  @OneToMany(() => Expense, (expense) => expense.card)
+  expenses: Expense[];
 
   @CreateDateColumn()
   createdAt: Date;

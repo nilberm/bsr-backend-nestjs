@@ -32,7 +32,10 @@ export class EarningService {
     }
 
     const category = await this.categoryRepository.findOne({
-      where: { id: createEarningDto.categoryId, user: { id: user.id } },
+      where: [
+        { id: createEarningDto.categoryId, user: { id: user.id } },
+        { id: createEarningDto.categoryId, isDefault: true },
+      ],
     });
 
     if (!category) {
@@ -48,7 +51,12 @@ export class EarningService {
       category,
     });
 
-    return this.earningRepository.save(earning);
+    const savedEarning = await this.earningRepository.save(earning);
+
+    account.balance += Number(createEarningDto.amount);
+    await this.accountRepository.save(account);
+
+    return savedEarning;
   }
 
   async findAll(user: User): Promise<Earning[]> {
@@ -77,12 +85,54 @@ export class EarningService {
     user: User,
   ): Promise<Earning> {
     const earning = await this.findOne(id, user);
-    const updatedEarning = Object.assign(earning, updateEarningDto);
-    return this.earningRepository.save(updatedEarning);
+
+    const oldAmount = Number(earning.amount);
+    const oldAccount = earning.account;
+
+    let newAccount: Account | null = oldAccount;
+    if (
+      updateEarningDto.accountId &&
+      updateEarningDto.accountId !== oldAccount.id
+    ) {
+      newAccount = await this.accountRepository.findOne({
+        where: { id: updateEarningDto.accountId, user: { id: user.id } },
+      });
+
+      if (!newAccount) {
+        throw new NotFoundException('New account not found');
+      }
+    }
+
+    // Atualiza valores
+    Object.assign(earning, updateEarningDto);
+    if (updateEarningDto.date) {
+      earning.date = new Date(updateEarningDto.date);
+    }
+
+    earning.account = newAccount;
+
+    const updatedEarning = await this.earningRepository.save(earning);
+
+    if (oldAccount.id === newAccount.id) {
+      const newAmount = Number(updateEarningDto.amount ?? oldAmount);
+      oldAccount.balance += newAmount - oldAmount;
+      await this.accountRepository.save(oldAccount);
+    } else {
+      oldAccount.balance -= oldAmount;
+      newAccount.balance += Number(updateEarningDto.amount ?? 0);
+      await this.accountRepository.save([oldAccount, newAccount]);
+    }
+
+    return updatedEarning;
   }
 
   async remove(id: string, user: User): Promise<void> {
     const earning = await this.findOne(id, user);
+    const account = earning.account;
+
+    account.balance -= Number(earning.amount);
+    await this.accountRepository.save(account);
+
     await this.earningRepository.remove(earning);
   }
 }

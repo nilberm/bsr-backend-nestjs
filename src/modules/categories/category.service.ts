@@ -5,11 +5,11 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { Category } from './entities/category.entity';
+import { Category, CategoryType } from './entities/category.entity';
 
 @Injectable()
 export class CategoryService {
@@ -35,10 +35,16 @@ export class CategoryService {
     return this.categoryRepository.save(category);
   }
 
-  async findAll(user: User): Promise<Category[]> {
-    return this.categoryRepository.find({
-      where: [{ user: user }, { isDefault: true }],
-    });
+  async findAll(user: User, type?: CategoryType): Promise<Category[]> {
+    const where: FindOptionsWhere<Category>[] = [];
+
+    if (type) {
+      where.push({ user: { id: user.id }, type }, { isDefault: true, type });
+    } else {
+      where.push({ user: { id: user.id } }, { isDefault: true });
+    }
+
+    return this.categoryRepository.find({ where });
   }
 
   async findOne(id: string, user: User): Promise<Category> {

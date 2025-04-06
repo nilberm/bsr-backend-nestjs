@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,7 +22,9 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
+import { CategoryType } from './entities/category.entity';
 
 @ApiTags('Categories')
 @ApiBearerAuth()
@@ -47,14 +50,19 @@ export class CategoryController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all categories for the current user' })
+  @ApiOperation({
+    summary:
+      'Get all categories for the current user, optionally filtered by type',
+  })
+  @ApiQuery({ name: 'type', enum: ['income', 'expense'], required: false })
   @ApiResponse({
     status: 200,
-    description: 'List of all categories for the current user.',
+    description:
+      'List of all categories for the current user, optionally filtered by type.',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  findAll(@CurrentUser() user: User) {
-    return this.categoryService.findAll(user);
+  findAll(@CurrentUser() user: User, @Query('type') type?: CategoryType) {
+    return this.categoryService.findAll(user, type);
   }
 
   @Get(':id')

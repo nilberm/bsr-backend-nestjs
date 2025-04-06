@@ -13,6 +13,7 @@ import { CardModule } from './modules/cards/card.module';
 import { CategoryModule } from './modules/categories/category.module';
 import { ExpenseModule } from './modules/expenses/expense.module';
 import { EarningModule } from './modules/earning/earning.module';
+import { ReportModule } from './modules/report/report.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { EarningModule } from './modules/earning/earning.module';
     CategoryModule,
     ExpenseModule,
     EarningModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [

@@ -8,6 +8,10 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { Account } from '../../accounts/entities/account.entity';
 import { Category } from '../../categories/entities/category.entity';
+import { Card } from 'src/modules/cards/entities/card.entity';
+
+export type ExpenseType = 'fixed' | 'installments';
+export type ExpenseRecurrence = 'one-time' | 'monthly';
 
 @Entity('expenses')
 export class Expense {
@@ -17,8 +21,17 @@ export class Expense {
   @ManyToOne(() => User, (user) => user.expenses, { eager: true })
   user: User;
 
-  @ManyToOne(() => Account, (account) => account.expenses, { eager: true })
-  account: Account;
+  @ManyToOne(() => Account, (account) => account.expenses, {
+    eager: true,
+    nullable: true,
+  })
+  account?: Account;
+
+  @ManyToOne(() => Card, (card) => card.expenses, {
+    eager: true,
+    nullable: true,
+  })
+  card?: Card;
 
   @ManyToOne(() => Category, (category) => category.expenses, { eager: true })
   category: Category;
@@ -31,4 +44,18 @@ export class Expense {
 
   @CreateDateColumn()
   date: Date;
+
+  @Column({ type: 'enum', enum: ['fixed', 'installments'] })
+  type: ExpenseType;
+
+  @Column({ type: 'int', nullable: true })
+  installments?: number;
+
+  @Column({
+    type: 'enum',
+    enum: ['one-time', 'monthly'],
+    default: 'one-time',
+    nullable: true,
+  })
+  recurrence?: ExpenseRecurrence;
 }
