@@ -46,4 +46,17 @@ export class ReportController {
   ) {
     return this.reportService.getMonthlyReport(user, query);
   }
+
+  @Get('range')
+  @ApiOperation({
+    summary: 'Get available month range for reports based on user data',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Start and end date (first and last month with data)',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  getReportRange(@CurrentUser() user: User) {
+    return this.reportService.getReportRange(user);
+  }
 }
