@@ -25,9 +25,12 @@ export class ReportService {
     const startOfMonth = new Date(year, month - 1, 1);
     const endOfMonth = new Date(year, month, 0, 23, 59, 59);
 
-    const [allExpenses, earnings] = await Promise.all([
+    const [expenses, earnings] = await Promise.all([
       this.expenseRepository.find({
-        where: { user: { id: user.id } },
+        where: {
+          user: { id: user.id },
+          date: Between(startOfMonth, endOfMonth),
+        },
         relations: ['category', 'account', 'card'],
       }),
       this.earningRepository.find({
@@ -39,67 +42,25 @@ export class ReportService {
       }),
     ]);
 
-    const filteredExpenses = allExpenses
-      .map((expense) => {
-        if (expense.type === 'installments' && expense.installments) {
-          const installmentStart = new Date(expense.date);
-          const current = new Date(startOfMonth);
-          current.setHours(0, 0, 0, 0);
-
-          const diff =
-            (current.getFullYear() - installmentStart.getFullYear()) * 12 +
-            (current.getMonth() - installmentStart.getMonth());
-
-          if (diff >= 0 && diff < expense.installments) {
-            return {
-              id: expense.id,
-              type: 'expense',
-              description: expense.description,
-              amount: Number(
-                (Number(expense.amount) / expense.installments).toFixed(2),
-              ),
-              date: startOfMonth,
-              category: {
-                id: expense.category?.id,
-                name: expense.category?.name,
-              },
-              account: expense.account
-                ? { id: expense.account.id, name: expense.account.name }
-                : undefined,
-              card: expense.card
-                ? { id: expense.card.id, name: expense.card.name }
-                : undefined,
-              installmentInfo: `${diff + 1}/${expense.installments}`,
-            };
-          }
-
-          return null;
-        }
-
-        const expenseDate = new Date(expense.date);
-        if (expenseDate >= startOfMonth && expenseDate <= endOfMonth) {
-          return {
-            id: expense.id,
-            type: 'expense',
-            description: expense.description,
-            amount: Number(expense.amount),
-            date: expense.date,
-            category: {
-              id: expense.category?.id,
-              name: expense.category?.name,
-            },
-            account: expense.account
-              ? { id: expense.account.id, name: expense.account.name }
-              : undefined,
-            card: expense.card
-              ? { id: expense.card.id, name: expense.card.name }
-              : undefined,
-          };
-        }
-
-        return null;
-      })
-      .filter((e) => e !== null);
+    const expenseTransactions = expenses.map((e) => ({
+      id: e.id,
+      type: 'expense',
+      description: e.description,
+      amount: Number(e.amount),
+      date: e.date,
+      category: {
+        id: e.category?.id,
+        name: e.category?.name,
+      },
+      account: e.account
+        ? { id: e.account.id, name: e.account.name }
+        : undefined,
+      card: e.card ? { id: e.card.id, name: e.card.name } : undefined,
+      installmentInfo:
+        e.installmentNumber && e.installmentTotal
+          ? `${e.installmentNumber}/${e.installmentTotal}`
+          : undefined,
+    }));
 
     const earningTransactions = earnings.map((e) => ({
       id: e.id,
@@ -119,7 +80,7 @@ export class ReportService {
         : undefined,
     }));
 
-    const transactions = [...filteredExpenses, ...earningTransactions].sort(
+    const transactions = [...expenseTransactions, ...earningTransactions].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     );
 
@@ -127,12 +88,10 @@ export class ReportService {
       (sum, e) => sum + e.amount,
       0,
     );
-
-    const totalExpenses = filteredExpenses.reduce(
+    const totalExpenses = expenseTransactions.reduce(
       (sum, e) => sum + e.amount,
       0,
     );
-
     const balance = totalEarnings - totalExpenses;
 
     return {

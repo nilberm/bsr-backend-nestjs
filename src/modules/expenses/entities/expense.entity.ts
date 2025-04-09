@@ -48,9 +48,6 @@ export class Expense {
   @Column({ type: 'enum', enum: ['fixed', 'installments'] })
   type: ExpenseType;
 
-  @Column({ type: 'int', nullable: true })
-  installments?: number;
-
   @Column({
     type: 'enum',
     enum: ['one-time', 'monthly'],
@@ -58,4 +55,19 @@ export class Expense {
     nullable: true,
   })
   recurrence?: ExpenseRecurrence;
+
+  @Column({ type: 'uuid', nullable: true })
+  recurrenceGroupId?: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  recurrenceEndDate?: Date;
+
+  @Column({ type: 'int', nullable: true })
+  installmentNumber?: number;
+
+  @Column({ type: 'int', nullable: true })
+  installmentTotal?: number;
+
+  @Column({ type: 'uuid', nullable: true })
+  installmentGroupId?: string;
 }

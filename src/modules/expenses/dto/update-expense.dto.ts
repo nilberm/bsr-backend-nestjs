@@ -86,4 +86,15 @@ export class UpdateExpenseDto {
   @IsIn(['one-time', 'monthly'])
   @IsOptional()
   recurrence?: 'one-time' | 'monthly';
+
+  @ApiPropertyOptional({
+    description: 'End date of the recurrence (only for monthly recurrence)',
+    example: '2025-12-31',
+  })
+  @ValidateIf(
+    (o: UpdateExpenseDto) => o.type === 'fixed' && o.recurrence === 'monthly',
+  )
+  @IsDate()
+  @IsOptional()
+  recurrenceEndDate?: Date;
 }

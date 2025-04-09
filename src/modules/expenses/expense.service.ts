@@ -8,6 +8,7 @@ import { User } from '../users/entities/user.entity';
 import { Account } from '../accounts/entities/account.entity';
 import { Category } from '../categories/entities/category.entity';
 import { Card } from '../cards/entities/card.entity';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ExpenseService {
@@ -34,6 +35,7 @@ export class ExpenseService {
       type,
       installments,
       recurrence,
+      recurrenceEndDate,
       date,
       description,
     } = createExpenseDto;
@@ -50,32 +52,36 @@ export class ExpenseService {
       );
     }
 
-    let account: Account | null = null;
-    let card: Card | null = null;
+    let account: Account | undefined;
+    let card: Card | undefined;
 
     if (accountId) {
-      account = await this.accountRepository.findOne({
+      const foundAccount = await this.accountRepository.findOne({
         where: { id: accountId },
         relations: ['user'],
       });
 
-      if (!account || account.user.id !== user.id) {
+      if (!foundAccount || foundAccount.user.id !== user.id) {
         throw new NotFoundException(
           'Account not found or does not belong to the user',
         );
       }
+
+      account = foundAccount;
     }
 
     if (cardId) {
-      card = await this.cardRepository.findOne({
+      const foundCard = await this.cardRepository.findOne({
         where: { id: cardId, user: { id: user.id } },
       });
 
-      if (!card) {
+      if (!foundCard) {
         throw new NotFoundException(
           'Card not found or does not belong to the user',
         );
       }
+
+      card = foundCard;
     }
 
     const category = await this.categoryRepository.findOne({
@@ -90,23 +96,19 @@ export class ExpenseService {
     }
 
     const baseData: Partial<Expense> = {
-      description,
-      amount,
-      date,
       user,
       category,
-      type,
-      recurrence,
+      account,
+      card,
     };
 
-    if (account) baseData.account = account;
-    if (card) baseData.card = card;
-
+    // Installments
     if (type === 'installments') {
       const numberOfInstallments = installments ?? 1;
       const installmentValue = Number(
         (Number(amount) / numberOfInstallments).toFixed(2),
       );
+      const groupId = uuidv4();
       const expenses: Expense[] = [];
 
       for (let i = 0; i < numberOfInstallments; i++) {
@@ -117,7 +119,12 @@ export class ExpenseService {
           ...baseData,
           amount: installmentValue,
           date: installmentDate,
-          installments: numberOfInstallments,
+          type: 'fixed',
+          recurrence: 'one-time',
+          description: `${description} (${i + 1}/${numberOfInstallments})`,
+          installmentNumber: i + 1,
+          installmentTotal: numberOfInstallments,
+          installmentGroupId: groupId,
         });
 
         expenses.push(expense);
@@ -133,9 +140,48 @@ export class ExpenseService {
       return saved;
     }
 
+    // Monthly recurrence
+    if (type === 'fixed' && recurrence === 'monthly' && recurrenceEndDate) {
+      const expenses: Expense[] = [];
+      const recurrenceGroupId = uuidv4();
+
+      const currentDate = new Date(date);
+      const endDate = new Date(recurrenceEndDate);
+
+      while (currentDate <= endDate) {
+        const expense = this.expenseRepository.create({
+          ...baseData,
+          amount,
+          date: new Date(currentDate),
+          type: 'fixed',
+          recurrence: 'one-time',
+          recurrenceGroupId,
+          recurrenceEndDate: endDate,
+          description,
+        });
+
+        expenses.push(expense);
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+
+      const saved = await this.expenseRepository.save(expenses);
+
+      if (account) {
+        account.balance -= Number(amount) * expenses.length;
+        await this.accountRepository.save(account);
+      }
+
+      return saved;
+    }
+
+    // Regular one-time or fixed expense
     const expense = this.expenseRepository.create({
       ...baseData,
-      installments: undefined,
+      amount,
+      date,
+      type,
+      recurrence,
+      description,
     });
 
     const savedExpense = await this.expenseRepository.save(expense);
