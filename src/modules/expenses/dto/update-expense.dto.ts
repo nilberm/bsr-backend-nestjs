@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  IsBoolean,
   ValidateIf,
 } from 'class-validator';
 
@@ -97,4 +98,12 @@ export class UpdateExpenseDto {
   @IsDate()
   @IsOptional()
   recurrenceEndDate?: Date;
+
+  @ApiPropertyOptional({
+    description: 'Whether the expense has been paid',
+    example: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isPaid?: boolean;
 }

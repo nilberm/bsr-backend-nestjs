@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  HttpCode,
 } from '@nestjs/common';
 import { ExpenseService } from './expense.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -22,6 +23,7 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
+import { PayExpensesDto } from './dto/pay-expenses.dto';
 
 @ApiTags('Expenses')
 @ApiBearerAuth()
@@ -112,5 +114,15 @@ export class ExpenseController {
   })
   remove(@Param('id') id: string, @CurrentUser() user: User) {
     return this.expenseService.remove(id, user);
+  }
+
+  @Patch('pay')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Mark multiple expenses as paid' })
+  @ApiResponse({ status: 200, description: 'Expenses marked as paid' })
+  @ApiResponse({ status: 400, description: 'Invalid or duplicate IDs' })
+  @ApiBody({ type: PayExpensesDto })
+  markAsPaid(@Body() body: PayExpensesDto, @CurrentUser() user: User) {
+    return this.expenseService.markAsPaid(body.expenseIds, user);
   }
 }

@@ -14,7 +14,11 @@ export class CardService {
   ) {}
 
   async create(createCardDto: CreateCardDto, user: User): Promise<Card> {
-    const card = this.cardRepository.create({ ...createCardDto, user });
+    const card = this.cardRepository.create({
+      ...createCardDto,
+      currentLimit: createCardDto.limit,
+      user,
+    });
     return this.cardRepository.save(card);
   }
 

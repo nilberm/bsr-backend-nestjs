@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Expense } from './entities/expense.entity';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
@@ -9,6 +9,7 @@ import { Account } from '../accounts/entities/account.entity';
 import { Category } from '../categories/entities/category.entity';
 import { Card } from '../cards/entities/card.entity';
 import { v4 as uuidv4 } from 'uuid';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class ExpenseService {
@@ -137,6 +138,11 @@ export class ExpenseService {
         await this.accountRepository.save(account);
       }
 
+      if (card) {
+        card.currentLimit -= Number(amount);
+        await this.cardRepository.save(card);
+      }
+
       return saved;
     }
 
@@ -171,6 +177,18 @@ export class ExpenseService {
         await this.accountRepository.save(account);
       }
 
+      if (card) {
+        const monthNow = dayjs().format('YYYY-MM');
+        const currentMonthExpense = saved.find(
+          (e) => dayjs(e.date).format('YYYY-MM') === monthNow,
+        );
+
+        if (currentMonthExpense) {
+          card.currentLimit -= Number(currentMonthExpense.amount);
+          await this.cardRepository.save(card);
+        }
+      }
+
       return saved;
     }
 
@@ -189,6 +207,11 @@ export class ExpenseService {
     if (account) {
       account.balance -= Number(amount);
       await this.accountRepository.save(account);
+    }
+
+    if (card) {
+      card.currentLimit -= Number(amount);
+      await this.cardRepository.save(card);
     }
 
     return savedExpense;
@@ -224,6 +247,60 @@ export class ExpenseService {
 
   async remove(id: string, user: User): Promise<void> {
     const expense = await this.findOne(id, user);
+
+    if (!expense.isPaid) {
+      if (expense.account) {
+        expense.account.balance += Number(expense.amount);
+        await this.accountRepository.save(expense.account);
+      }
+
+      if (expense.card) {
+        const today = dayjs();
+        const isCurrentMonth = dayjs(expense.date).isSame(today, 'month');
+
+        if (isCurrentMonth) {
+          expense.card.currentLimit += Number(expense.amount);
+          await this.cardRepository.save(expense.card);
+        }
+      }
+    }
+
     await this.expenseRepository.remove(expense);
+  }
+
+  async markAsPaid(expenseIds: string[], user: User): Promise<Expense[]> {
+    const expenses = await this.expenseRepository.find({
+      where: { id: In(expenseIds) },
+      relations: ['user', 'account', 'card'],
+    });
+
+    const userExpenses = expenses.filter((e) => e.user.id === user.id);
+    if (userExpenses.length !== expenseIds.length) {
+      throw new NotFoundException(
+        'One or more expenses not found or do not belong to the user.',
+      );
+    }
+
+    const updatedExpenses: Expense[] = [];
+
+    for (const expense of userExpenses) {
+      if (expense.isPaid) continue;
+
+      expense.isPaid = true;
+
+      if (expense.account) {
+        expense.account.balance += Number(expense.amount);
+        await this.accountRepository.save(expense.account);
+      }
+
+      if (expense.card) {
+        expense.card.currentLimit += Number(expense.amount);
+        await this.cardRepository.save(expense.card);
+      }
+
+      updatedExpenses.push(expense);
+    }
+
+    return this.expenseRepository.save(updatedExpenses);
   }
 }

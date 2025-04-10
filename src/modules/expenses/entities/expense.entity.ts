@@ -70,4 +70,7 @@ export class Expense {
 
   @Column({ type: 'uuid', nullable: true })
   installmentGroupId?: string;
+
+  @Column({ default: false })
+  isPaid: boolean;
 }

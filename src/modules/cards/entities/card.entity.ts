@@ -24,6 +24,9 @@ export class Card {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   limit: number;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  currentLimit: number;
+
   @Column({ type: 'int' })
   closingDay: number;
 
