@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { MonthlyReportQueryDto } from './dto/monthly-report-query.dto';
 import dayjs from 'dayjs';
 import minMax from 'dayjs/plugin/minMax';
+import { CardMonthlyExpensesQueryDto } from './dto/card-monthly-expenses-query.dto';
 dayjs.extend(minMax);
 
 @Injectable()
@@ -159,6 +160,29 @@ export class ReportService {
       end: lastDate.isBefore(now)
         ? now.add(1, 'month').endOf('month').toISOString()
         : lastDate.toISOString(),
+    };
+  }
+
+  async getCardMonthlyExpenses(user: User, query: CardMonthlyExpensesQueryDto) {
+    const { cardId, month, year } = query;
+
+    const startOfMonth = dayjs(`${year}-${month}-01`).startOf('month').toDate();
+    const endOfMonth = dayjs(startOfMonth).endOf('month').toDate();
+
+    const expenses = await this.expenseRepository.find({
+      where: {
+        user: { id: user.id },
+        card: { id: cardId },
+        date: Between(startOfMonth, endOfMonth),
+      },
+      relations: ['category', 'card'],
+    });
+
+    const total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+
+    return {
+      total,
+      expenses,
     };
   }
 }

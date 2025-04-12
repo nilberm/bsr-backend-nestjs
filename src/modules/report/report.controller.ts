@@ -11,6 +11,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
+import { CardMonthlyExpensesQueryDto } from './dto/card-monthly-expenses-query.dto';
 
 @ApiTags('Report')
 @ApiBearerAuth()
@@ -58,5 +59,34 @@ export class ReportController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   getReportRange(@CurrentUser() user: User) {
     return this.reportService.getReportRange(user);
+  }
+
+  @Get('card-expenses')
+  @ApiOperation({
+    summary: 'Get expenses for a specific card and month/year',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of expenses for the selected card and total amount.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiQuery({ name: 'cardId', required: true, description: 'UUID of the card' })
+  @ApiQuery({
+    name: 'month',
+    required: true,
+    description: 'Month (1-12)',
+    example: 4,
+  })
+  @ApiQuery({
+    name: 'year',
+    required: true,
+    description: 'Year',
+    example: 2025,
+  })
+  getCardMonthlyExpenses(
+    @Query() query: CardMonthlyExpensesQueryDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.reportService.getCardMonthlyExpenses(user, query);
   }
 }
