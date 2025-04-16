@@ -51,6 +51,7 @@ export class ReportService {
       description: e.description,
       amount: Number(e.amount),
       date: e.date,
+      isPaid: e.isPaid,
       category: {
         id: e.category?.id,
         name: e.category?.name,

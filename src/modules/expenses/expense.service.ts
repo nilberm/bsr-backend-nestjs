@@ -289,12 +289,14 @@ export class ExpenseService {
       expense.isPaid = true;
 
       if (expense.account) {
-        expense.account.balance += Number(expense.amount);
+        expense.account.balance =
+          Number(expense.account.balance) + Number(expense.amount);
         await this.accountRepository.save(expense.account);
       }
 
       if (expense.card) {
-        expense.card.currentLimit += Number(expense.amount);
+        expense.card.currentLimit =
+          Number(expense.card.currentLimit) + Number(expense.amount);
         await this.cardRepository.save(expense.card);
       }
 

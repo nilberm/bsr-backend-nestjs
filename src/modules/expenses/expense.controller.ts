@@ -76,6 +76,16 @@ export class ExpenseController {
     return this.expenseService.findOne(id, user);
   }
 
+  @Patch('pay')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Mark multiple expenses as paid' })
+  @ApiResponse({ status: 200, description: 'Expenses marked as paid' })
+  @ApiResponse({ status: 400, description: 'Invalid or duplicate IDs' })
+  @ApiBody({ type: PayExpensesDto })
+  markAsPaid(@Body() body: PayExpensesDto, @CurrentUser() user: User) {
+    return this.expenseService.markAsPaid(body.expenseIds, user);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update an expense by ID for the current user' })
   @ApiResponse({
@@ -114,15 +124,5 @@ export class ExpenseController {
   })
   remove(@Param('id') id: string, @CurrentUser() user: User) {
     return this.expenseService.remove(id, user);
-  }
-
-  @Patch('pay')
-  @HttpCode(200)
-  @ApiOperation({ summary: 'Mark multiple expenses as paid' })
-  @ApiResponse({ status: 200, description: 'Expenses marked as paid' })
-  @ApiResponse({ status: 400, description: 'Invalid or duplicate IDs' })
-  @ApiBody({ type: PayExpensesDto })
-  markAsPaid(@Body() body: PayExpensesDto, @CurrentUser() user: User) {
-    return this.expenseService.markAsPaid(body.expenseIds, user);
   }
 }
