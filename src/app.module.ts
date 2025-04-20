@@ -14,6 +14,7 @@ import { CategoryModule } from './modules/categories/category.module';
 import { ExpenseModule } from './modules/expenses/expense.module';
 import { EarningModule } from './modules/earning/earning.module';
 import { ReportModule } from './modules/report/report.module';
+import { DataModule } from './modules/data/data.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ReportModule } from './modules/report/report.module';
     ExpenseModule,
     EarningModule,
     ReportModule,
+    DataModule,
   ],
   controllers: [AppController],
   providers: [
